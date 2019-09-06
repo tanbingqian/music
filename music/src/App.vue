@@ -1,21 +1,22 @@
 <template>
   <div id="app">
-    <!-- <div id="nav">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link>
-    </div> -->
     <Mheader></Mheader>
     <Tab></Tab>
-    <router-view />
+    <keep-alive>
+      <router-view />
+    </keep-alive>
+    <player></player>
   </div>
 </template>
 <script>
 import Mheader from "./components/m-header/m-header";
 import Tab from "./components/tab/tab"
+import Player from "./components/player/player"
 export default {
   components: {
     Mheader,
-    Tab
+    Tab,
+    Player
   }
 };
 </script>

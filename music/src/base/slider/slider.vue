@@ -1,10 +1,10 @@
 <template>
     <div class="slider" ref="slider">
       <div class="slider-group" ref="sliderGroup">
-         <slot></slot>
+        <slot></slot>
       </div>
       <div class="dots">
-
+        <span class="dot" v-for="(item,index) in dots" :key="index" :class="{active:currentPageIndex === index}">4</span>
       </div>
     </div>
 </template>
@@ -16,7 +16,8 @@ import {addClass} from "@/common/js/dom"
 export default {
     data(){
         return{
-
+          dots: [],
+          currentPageIndex: 0
         }
     },
     props: {
@@ -40,12 +41,37 @@ export default {
         //页面加载延迟
         setTimeout(() => {
            this._setSliderWidth();
+           this._ititDots();
            this._initSlider();
-        },20)
+
+           //自动播放
+           if(this.autoPlay){
+             this._paly();
+           }
+        },20);
+        //尺寸发生改变的时候重新计算_setSliderWidth
+        window.addEventListener('resize',()=>{
+          if(!this.slider || !this.slider.enable){
+            return
+          }
+          clearTimeout(this.resizeTimer)
+          this.resizeTimer = setTimeout(() => {
+            if (this.slider.isInTransition) {
+              this._onScrollEnd()
+            } else {
+              if (this.autoPlay) {
+                this._play()
+              }
+            }
+            this.refresh()
+          }, 60)
+          // this._setSliderWidth(true);
+          // this.slider.refresh(); 
+        })
     },
-    methods:{
+    methods: {
         //获取宽度
-        _setSliderWidth() {
+        _setSliderWidth(isResize) {
            this.children = this.$refs.sliderGroup.children;  //获取sliderGroup的children 也就是说sliderGroup有多少个元素
 
            let width = 0;
@@ -57,34 +83,68 @@ export default {
               width += sliderWidth 
            }
 
-           if(this.loop){
+           if(this.loop && ! isResize){
               width += 2*sliderWidth ;  //滚动的时候，两边的宽度加倍
            }
            this.$refs.sliderGroup.style.width = width + 'px'
 
         },
-        //初始化
+        
+
+        //初始化dots
+        _ititDots(){
+          this.dots = new Array(this.children.length)
+        },
+      
+        //初始化幻灯片
         _initSlider() {
            this.slider = new Bscroll(this.$refs.slider, {
                scrollX: true,
                scrollY: false,
                momentum: false,
-               snap: true,
-               snapLoop: this.loop,
-               snapThreshold: 0.3,
-               snapSpeed: 400,
-               click: true
+               snap: {
+                loop: this.loop,
+                threshold: 0.3,
+                speed: 400
+              }
+          });
+           this.slider.on('scrollEnd', this._onScrollEnd)
+           this.slider.on('scrollEnd',()=>{  //切换的时候使用scrollEnd事件
+             //获取元素的第几个元素
+             let pageIndex = this.slider.getCurrentPage().pageX
+             this.currentPageIndex = pageIndex;
+
+            //清除时间
+            if(this.autoPlay){
+              clearTimeout(this.timer);
+              this._paly();
+            }
            })
-        }
-    }
-    
+        },
+
+        //自动播放方法
+        _paly(){
+          clearTimeout(this.timer);
+          //添加定时器
+          this.timer = setTimeout(()=>{
+            // this.slider.goToPage(pageIndex, 0, 400)   //goToPage事件，400表示间隔
+            this.slider.next()
+          }, this.interval);
+        },
+    },
+    destroyed() {
+      clearTimeout(this.timer);
+    },
 }
 </script>
 
 
 <style  scoped lang="stylus" rel="stylesheet/stylus">
 @import "~@/common/stylus/variable"
-  .slider
+
+.slider
+    min-height: 1px
+   .slider
     min-height: 1px
     .slider-group
       position: relative
