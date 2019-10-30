@@ -10,7 +10,7 @@
     "test:unit": "vue-cli-service test:unit"
   },
   "dependencies": {
-    "axios": "^0.16.2",
+    "axios": "^0.18.1",
     "better-scroll": "^1.6.0",
     "core-js": "^2.6.5",
     "fastclick": "^1.0.6",
